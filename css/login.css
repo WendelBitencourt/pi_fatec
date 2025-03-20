@@ -59,7 +59,6 @@ body {
   color: #2d3748 !important;
 }
 
-/* Nova regra para hover personalizada */
 .custom-hover:hover {
   color: #ffd700;
   text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);

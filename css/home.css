@@ -1,0 +1,67 @@
+body {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+}
+
+.logo {
+  text-align: center;
+  padding: 2rem 0;
+  color: white;
+}
+
+.logo-icon {
+  font-size: 2.5rem;
+  color: #ffd700;
+  text-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+}
+
+.sensor-card {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 15px;
+  transition: transform 0.3s ease;
+  margin-bottom: 1.5rem;
+}
+
+.sensor-card:hover {
+  transform: translateY(-5px);
+}
+
+.modal-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 15px 15px 0 0;
+}
+
+.modal-content {
+  border-radius: 15px;
+  border: none;
+}
+
+.btn-smart {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  transition: all 0.3s ease;
+}
+
+.btn-smart:hover {
+  transform: scale(1.05);
+  color: #ffd700 !important;
+  text-shadow: 0 0 10px rgba(255, 215, 0, 0.8);
+}
+
+.status-indicator {
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 8px;
+}
+
+.online {
+  background-color: #4ade80;
+}
+
+.offline {
+  background-color: #ef4444;
+}
