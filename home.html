@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Lights - Sensores</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .logo {
+            text-align: center;
+            padding: 2rem 0;
+            color: white;
+        }
+
+        .logo-icon {
+            font-size: 2.5rem;
+            color: #ffd700;
+            text-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+        }
+
+        .sensor-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            transition: transform 0.3s ease;
+            margin-bottom: 1.5rem;
+        }
+
+        .sensor-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px 15px 0 0;
+        }
+
+        .modal-content {
+            border-radius: 15px;
+            border: none;
+        }
+
+        .btn-smart {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            transition: all 0.3s ease;
+        }
+
+        .btn-smart:hover {
+            transform: scale(1.05);
+            color: #ffd700 !important;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.8);
+        }
+
+        .status-indicator {
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+        }
+
+        .online {
+            background-color: #4ade80;
+        }
+
+        .offline {
+            background-color: #ef4444;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Logo -->
+    <div class="logo">
+        <i class="fas fa-lightbulb logo-icon"></i>
+        <h1 class="mt-2" style="color: #ffd700; text-shadow: 0 0 10px rgba(255,215,0,0.5);">Smart Lights Control</h1>
+    </div>
+
+    <!-- Conteúdo Principal -->
+    <div class="container">
+        <div class="d-flex justify-content-between mb-4">
+            <h3 class="text-white">Meus Sensores</h3>
+            <button class="btn btn-smart" data-bs-toggle="modal" data-bs-target="#addSensorModal">
+                <i class="fas fa-plus"></i> Adicionar Sensor
+            </button>
+        </div>
+
+        <!-- Lista de Sensores -->
+        <div class="row" id="sensorsList">
+            <!-- Sensores serão adicionados dinamicamente aqui -->
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <!-- Adicionar Sensor Modal -->
+    <div class="modal fade" id="addSensorModal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-plus"></i> Adicionar Sensor</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addSensorForm">
+                        <div class="mb-3">
+                            <label>Nome do Sensor</label>
+                            <input type="text" class="form-control" id="sensorName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label>Localização</label>
+                            <input type="text" class="form-control" id="sensorLocation" required>
+                        </div>
+                        <div class="mb-3">
+                            <label>Intensidade da luz em repouso: <span id="restLightIntensityValue">50%</span></label>
+                            <input type="range" class="form-range" id="restLightIntensity" min="0" max="100" step="1"
+                                value="50"
+                                oninput="document.getElementById('restLightIntensityValue').innerText = this.value + '%'">
+                        </div>
+                        <div class="mb-3">
+                            <label>Intensidade da luz com presença: <span
+                                    id="proximityLightIntensityValue">75%</span></label>
+                            <input type="range" class="form-range" id="proximityLightIntensity" min="0" max="100"
+                                step="1" value="75"
+                                oninput="document.getElementById('proximityLightIntensityValue').innerText = this.value + '%'">
+                        </div>
+                        <button type="submit" class="btn btn-smart w-100">Adicionar</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Editar Sensor Modal -->
+    <div class="modal fade" id="editSensorModal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-edit"></i> Editar Sensor</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editSensorForm">
+                        <div class="mb-3">
+                            <label>Nome do Sensor</label>
+                            <input type="text" class="form-control" id="editSensorName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label>Localização</label>
+                            <input type="text" class="form-control" id="editSensorLocation" required>
+                        </div>
+                        <div class="mb-3">
+                            <label>Intensidade da luz em repouso: <span
+                                    id="editRestLightIntensityValue">50%</span></label>
+                            <input type="range" class="form-range" id="editRestLightIntensity" min="0" max="100"
+                                step="1" value="50"
+                                oninput="document.getElementById('editRestLightIntensityValue').innerText = this.value + '%'">
+                        </div>
+                        <div class="mb-3">
+                            <label>Intensidade da luz com presença: <span
+                                    id="editProximityLightIntensityValue">75%</span></label>
+                            <input type="range" class="form-range" id="editProximityLightIntensity" min="0" max="100"
+                                step="1" value="75"
+                                oninput="document.getElementById('editProximityLightIntensityValue').innerText = this.value + '%'">
+                        </div>
+                        <button type="submit" class="btn btn-smart w-100">Salvar Alterações</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Visualizar Sensor Modal -->
+    <div class="modal fade" id="viewSensorModal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-info-circle"></i> Detalhes do Sensor</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-6">
+                            <p><strong>Nome:</strong> <span id="viewName">-</span></p>
+                            <p><strong>ID:</strong> <span id="viewId">-</span></p>
+                            <p><strong>Status:</strong> <span id="viewStatus">-</span></p>
+                        </div>
+                        <div class="col-6">
+                            <p><strong>Localização:</strong> <span id="viewLocation">-</span></p>
+                            <p><strong>Última Atualização:</strong> <span id="viewLastUpdate">-</span></p>
+                            <p><strong>Intensidade em repouso:</strong> <span id="viewRestIntensity">-</span></p>
+                            <p><strong>Intensidade com presença:</strong> <span id="viewProximityIntensity">-</span></p>
+                        </div>
+                    </div>
+                    <div class="mt-3 bg-light p-2 rounded">
+                        <h6>Estatísticas</h6>
+                        <p class="mb-0">Luminosidade: <span id="viewLuminosity">-</span></p>
+                        <p class="mb-0">Consumo: <span id="viewConsumption">-</span></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Deletar Sensor Modal -->
+    <div class="modal fade" id="deleteSensorModal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger">
+                    <h5 class="modal-title text-white"><i class="fas fa-exclamation-triangle"></i> Confirmar Exclusão
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Tem certeza que deseja excluir o sensor "<span id="deleteSensorName"></span>"?</p>
+                    <div class="d-flex justify-content-end gap-2">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="button" class="btn btn-danger" id="confirmDelete">Excluir</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const sensorsList = document.getElementById('sensorsList');
+            let sensors = [];
+
+            function createSensorCard(sensor) {
+                return `
+                    <div class="col-md-4 sensor-item" data-id="${sensor.id}">
+                        <div class="sensor-card p-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h5><span class="status-indicator ${sensor.status ? 'online' : 'offline'}"></span> ${sensor.name}</h5>
+                                    <p class="text-muted mb-0">ID: #${sensor.id}</p>
+                                </div>
+                                <div>
+                                    <button class="btn btn-sm btn-smart view-btn" data-bs-toggle="modal" data-bs-target="#viewSensorModal">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-smart mx-1 edit-btn" data-bs-toggle="modal" data-bs-target="#editSensorModal">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-danger delete-btn" data-bs-toggle="modal" data-bs-target="#deleteSensorModal">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            function updateSensorList() {
+                sensorsList.innerHTML = sensors.map(sensor => createSensorCard(sensor)).join('');
+            }
+
+            // Adicionar Sensor
+            document.getElementById('addSensorForm').addEventListener('submit', function (e) {
+                e.preventDefault();
+
+                const newSensor = {
+                    id: Date.now(),
+                    name: document.getElementById('sensorName').value,
+                    location: document.getElementById('sensorLocation').value,
+                    restIntensity: document.getElementById('restLightIntensity').value,
+                    proximityIntensity: document.getElementById('proximityLightIntensity').value,
+                    status: true,
+                    lastUpdate: new Date().toLocaleString(),
+                    luminosity: Math.floor(Math.random() * 1000) + ' lux',
+                    consumption: Math.floor(Math.random() * 50) + 'W'
+                };
+
+                sensors.push(newSensor);
+                updateSensorList();
+                bootstrap.Modal.getInstance(document.getElementById('addSensorModal')).hide();
+                this.reset();
+
+                // Resetar valores exibidos dos range inputs
+                document.getElementById('restLightIntensityValue').innerText = '50%';
+                document.getElementById('proximityLightIntensityValue').innerText = '75%';
+            });
+
+            // Editar Sensor
+            document.addEventListener('click', function (e) {
+                if (e.target.closest('.edit-btn')) {
+                    const card = e.target.closest('.sensor-item');
+                    const sensorId = parseInt(card.dataset.id);
+                    const sensor = sensors.find(s => s.id === sensorId);
+
+                    // Preencher formulário de edição
+                    document.getElementById('editSensorName').value = sensor.name;
+                    document.getElementById('editSensorLocation').value = sensor.location;
+                    document.getElementById('editRestLightIntensity').value = sensor.restIntensity;
+                    document.getElementById('editProximityLightIntensity').value = sensor.proximityIntensity;
+                    document.getElementById('editRestLightIntensityValue').innerText = sensor.restIntensity + '%';
+                    document.getElementById('editProximityLightIntensityValue').innerText = sensor.proximityIntensity + '%';
+
+                    // Configurar submit da edição
+                    document.getElementById('editSensorForm').onsubmit = function (event) {
+                        event.preventDefault();
+
+                        // Atualizar dados
+                        sensor.name = document.getElementById('editSensorName').value;
+                        sensor.location = document.getElementById('editSensorLocation').value;
+                        sensor.restIntensity = document.getElementById('editRestLightIntensity').value;
+                        sensor.proximityIntensity = document.getElementById('editProximityLightIntensity').value;
+
+                        updateSensorList();
+                        bootstrap.Modal.getInstance(document.getElementById('editSensorModal')).hide();
+                    };
+                }
+            });
+
+            // Deletar Sensor
+            document.addEventListener('click', function (e) {
+                if (e.target.closest('.delete-btn')) {
+                    const card = e.target.closest('.sensor-item');
+                    const sensorId = parseInt(card.dataset.id);
+                    const sensor = sensors.find(s => s.id === sensorId);
+
+                    document.getElementById('deleteSensorName').textContent = sensor.name;
+
+                    document.getElementById('confirmDelete').onclick = function () {
+                        sensors = sensors.filter(s => s.id !== sensorId);
+                        updateSensorList();
+                        bootstrap.Modal.getInstance(document.getElementById('deleteSensorModal')).hide();
+                    }
+                }
+            });
+
+            // Visualizar Sensor
+            document.addEventListener('click', function (e) {
+                if (e.target.closest('.view-btn')) {
+                    const card = e.target.closest('.sensor-item');
+                    const sensorId = parseInt(card.dataset.id);
+                    const sensor = sensors.find(s => s.id === sensorId);
+
+                    // Preencher dados
+                    document.getElementById('viewName').textContent = sensor.name;
+                    document.getElementById('viewId').textContent = '#' + sensor.id;
+                    document.getElementById('viewStatus').innerHTML = sensor.status ?
+                        '<span class="text-success">Online</span>' :
+                        '<span class="text-danger">Offline</span>';
+                    document.getElementById('viewLocation').textContent = sensor.location;
+                    document.getElementById('viewLastUpdate').textContent = sensor.lastUpdate;
+                    document.getElementById('viewRestIntensity').textContent = sensor.restIntensity + '%';
+                    document.getElementById('viewProximityIntensity').textContent = sensor.proximityIntensity + '%';
+                    document.getElementById('viewLuminosity').textContent = sensor.luminosity;
+                    document.getElementById('viewConsumption').textContent = sensor.consumption;
+                }
+            });
+
+        });
+
+
+
+
+    </script>
+
+</body>
+
+</html>
