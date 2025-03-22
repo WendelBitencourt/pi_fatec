@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Lights - Dashboard</title>
+    <link rel="stylesheet" href="css/home.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <!-- Logo -->
+    <div class="logo">
+        <i class="fas fa-lightbulb logo-icon"></i>
+        <h1 class="mt-2" style="color: #ffd700; text-shadow: 0 0 10px rgba(255,215,0,0.5);">Smart Lights Dashboard</h1>
+    </div>
+
+    <div class="container">
+        <!-- Seção de Resumo -->
+        <div class="row mb-4">
+            <div class="col-md-3 mb-3">
+                <div class="sensor-card p-3">
+                    <h6 class="text-muted">Total Sensores</h6>
+                    <h2 id="totalSensors">0</h2>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="sensor-card p-3">
+                    <h6 class="text-muted">Online</h6>
+                    <h2><span class="status-indicator online"></span><span id="onlineSensors">0</span></h2>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="sensor-card p-3">
+                    <h6 class="text-muted">Offline</h6>
+                    <h2><span class="status-indicator offline"></span><span id="offlineSensors">0</span></h2>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="sensor-card p-3">
+                    <h6 class="text-muted">Consumo Médio</h6>
+                    <h2 id="avgConsumption">0W</h2>
+                </div>
+            </div>
+        </div>
+
+        <!-- Área de Sensores e Gráficos -->
+        <div class="row mb-4">
+            <div class="col-md-6 mb-3">
+                <div class="sensor-card p-3">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5>Status dos Sensores</h5>
+                        <small class="text-muted">Atualizado em: <span id="lastUpdate">-</span></small>
+                    </div>
+                    <div id="sensorsStatusList" class="list-group" style="max-height: 400px; overflow-y: auto;">
+                        <!-- Sensores serão renderizados aqui -->
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 mb-3">
+                <div class="sensor-card p-3">
+                    <h5 class="mb-3">Desempenho em Tempo Real</h5>
+                    <canvas id="performanceChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Alertas e Análise -->
+        <div class="row mb-4">
+            <div class="col-md-6 mb-3">
+                <div class="sensor-card p-3">
+                    <h5 class="mb-3"><i class="fas fa-exclamation-triangle text-danger"></i> Alertas Recentes</h5>
+                    <div id="alertsList" class="list-group">
+                        <!-- Alertas serão adicionados aqui -->
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 mb-3">
+                <div class="sensor-card p-3">
+                    <h5 class="mb-3"><i class="fas fa-chart-bar"></i> Análise de Configurações</h5>
+                    <canvas id="configChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Histórico e Relatórios -->
+        <div class="row">
+            <div class="col-12">
+                <div class="sensor-card p-3">
+                    <div class="d-flex justify-content-between mb-3">
+                        <h5><i class="fas fa-history"></i> Histórico de Eventos</h5>
+                        <button class="btn btn-smart" onclick="exportCSV()">
+                            <i class="fas fa-download"></i> Exportar CSV
+                        </button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Sensor</th>
+                                    <th>Evento</th>
+                                    <th>Valor</th>
+                                    <th>Data/Hora</th>
+                                </tr>
+                            </thead>
+                            <tbody id="eventHistory">
+                                <!-- Eventos serão adicionados aqui -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Dados iniciais
+        let sensors = JSON.parse(localStorage.getItem('sensors')) || [];
+        let events = [];
+
+        // Inicializar gráficos
+        const performanceChart = new Chart(document.getElementById('performanceChart'), {
+            type: 'line',
+            data: {
+                labels: Array.from({ length: 24 }, (_, i) => `${i}h`),
+                datasets: [{
+                    label: 'Luminosidade',
+                    data: [],
+                    borderColor: '#667eea',
+                    fill: true
+                },
+                {
+                    label: 'Consumo (W)',
+                    data: [],
+                    borderColor: '#764ba2',
+                    fill: true
+                }]
+            }
+        });
+
+        const configChart = new Chart(document.getElementById('configChart'), {
+            type: 'bar',
+            data: {
+                labels: sensors.map(s => s.name),
+                datasets: [{
+                    label: 'Intensidade Repouso',
+                    data: sensors.map(s => s.restIntensity),
+                    backgroundColor: '#667eea'
+                },
+                {
+                    label: 'Intensidade Presença',
+                    data: sensors.map(s => s.proximityIntensity),
+                    backgroundColor: '#764ba2'
+                }]
+            }
+        });
+
+        // Atualizar lista de sensores
+        function renderSensors() {
+            const container = document.getElementById('sensorsStatusList');
+            container.innerHTML = '';
+
+            sensors.forEach(sensor => {
+                const sensorHTML = `
+                    <div class="list-group-item mb-2 border-0">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1">${sensor.name}</h6>
+                                <small class="text-muted">${sensor.location}</small>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <span class="status-indicator ${sensor.status === 'online' ? 'online' : 'offline'}"></span>
+                                <small class="ms-2">${sensor.status === 'online' ? 'Online' : 'Offline'}</small>
+                            </div>
+                        </div>
+                        <div class="mt-2 text-muted small">
+                            <span class="me-3"><i class="fas fa-lightbulb"></i> Repouso: ${sensor.restIntensity}%</span>
+                            <span class="me-3"><i class="fas fa-lightbulb-on"></i> Presença: ${sensor.proximityIntensity}%</span>
+                            <span><i class="fas fa-bolt"></i> ${sensor.consumption}W</span>
+                        </div>
+                    </div>
+                `;
+                container.insertAdjacentHTML('beforeend', sensorHTML);
+            });
+
+            document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString();
+        }
+
+        // Atualizar dashboard
+        function updateDashboard() {
+            const online = sensors.filter(s => s.status === 'online').length;
+            const offline = sensors.length - online;
+            const avgConsumption = sensors.reduce((sum, s) => sum + s.consumption, 0) / sensors.length || 0;
+
+            document.getElementById('totalSensors').textContent = sensors.length;
+            document.getElementById('onlineSensors').textContent = online;
+            document.getElementById('offlineSensors').textContent = offline;
+            document.getElementById('avgConsumption').textContent = `${avgConsumption.toFixed(1)}W`;
+
+            renderSensors();
+            performanceChart.update();
+            configChart.update();
+        }
+
+        // Simular dados
+        function generateSampleData() {
+            sensors = sensors.map(sensor => ({
+                ...sensor,
+                status: Math.random() > 0.2 ? 'online' : 'offline',
+                consumption: Math.floor(Math.random() * 100) + 50,
+                luminosity: Math.floor(Math.random() * 100)
+            }));
+
+            events = sensors.flatMap(sensor => [
+                {
+                    sensor: sensor.name,
+                    event: 'Leitura',
+                    value: `${sensor.luminosity}lx`,
+                    timestamp: new Date().toLocaleString()
+                },
+                {
+                    sensor: sensor.name,
+                    event: 'Consumo',
+                    value: `${sensor.consumption}W`,
+                    timestamp: new Date().toLocaleString()
+                }
+            ]);
+        }
+
+        // Exportar CSV
+        function exportCSV() {
+            const csvContent = "data:text/csv;charset=utf-8,"
+                + events.map(e => `${e.sensor},${e.event},${e.value},${e.timestamp}`).join("\n");
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "historico_sensores.csv");
+            document.body.appendChild(link);
+            link.click();
+        }
+
+        // Atualizar a cada 3 segundos
+        setInterval(() => {
+            generateSampleData();
+            updateDashboard();
+        }, 3000);
+
+        // Inicialização
+        updateDashboard();
+    </script>
+</body>
+
+</html>
